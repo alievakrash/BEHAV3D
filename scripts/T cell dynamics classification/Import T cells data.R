@@ -12,11 +12,11 @@ library(stats)
 library(dplyr)
 ## function to import organoid data from csv files extracted by Imaris
 read_plus <- function(flnm) {
-  read_csv(flnm, skip = 3) %>% 
+  read_csv(flnm, skip = 3, col_types = cols()) %>% 
     mutate(filename = flnm)
 }
 ## directory where the files are located
-working_directory <- "example_dataset_T_cell_tracking"  ## Insert here the direction to the example dataset directory
+working_directory <- "D:/R/scripts/T_cell paper/FINAL SCRIPTS_20210408/Fig2/b/github/example_t cell_data"
 setwd(working_directory)
 # import Displacement^2
 pat = "*Displacement"
@@ -39,29 +39,22 @@ pat = "*Position"
 files <- list.files(path = working_directory, pattern = pat, full.names = T, recursive = TRUE)
 pos <- ldply(files, read_plus)
 
+# import metadata information. Do not forget to manually create this csv for each experiment.
+pat = "*metadata"
+files <- list.files(path = working_directory, pattern = pat, full.names = T, recursive = TRUE)
+metadata <- ldply(files, read_plus)
+metadata<-na.omit(metadata)
 ### join all
-master <- cbind(displacement[,c(1,4,5,6)], speed[,c(1)], dist_org[,c(1)], red_lym[,c(1)], pos[,c(1,2,3,11)])
-### remove unnecesary signs from filename:
-master$filename<- gsub("/", "", master$filename)
-master$filename <- gsub("\\(", "", master$filename)
-master$filename <- gsub("\\)", "", master$filename)
-unique(master$filename)  ### check here the unique filenames (each filename corresponds to a well) and use unique patterns to adjust the metadata of your experiment
-## rename well // date // cell type according to filename
-master$well<-master$filename  ### well name
-master$well <- gsub(".*4_13T_CD4teg_CD8TEG.*", "well4_13T_exp1", master$well, perl=TRUE) ###duplicate and adjust if necessary
-master$well <- gsub(".*20201027_610T.*", "well6_10T_exp2", master$well, perl=TRUE)
+master <- cbind(displacement[,c("Displacement^2","Time","TrackID" ,"ID")], speed[,c("Speed" )], dist_org[,c("Intensity Min")], red_lym[,c("Intensity Mean")], pos[,c("Position X" ,"Position Y" ,"Position Z","filename"  )])
 
-master$exp<-master$filename  ### exp name
-master$exp <- gsub(".*2020-07-28.*", "20200728", master$exp, perl=TRUE) ###duplicate and adjust if necessary
-master$exp <- gsub(".*20201027.*", "20201027", master$exp, perl=TRUE)
+### Join metadata information
 
+### Convert the filename to the same format in both datasets (master and metadata)
+master$filename <- gsub("_Position", "", master$filename, perl=TRUE) 
+metadata$filename <- gsub("_metadata", "", metadata$filename, perl=TRUE) 
 
-master$cell_type<-master$filename  ### TEG and organoid name
-master$cell_type <- gsub(".*610T_g_.*", "CD4_TEG_10T", master$cell_type, perl=TRUE) ###duplicate and adjust if necessary
-master$cell_type <- gsub(".*610T_b_.*", "CD8_TEG_10T", master$cell_type, perl=TRUE)
-master$cell_type <- gsub(".*13T_CD4teg_CD8TEG_green.*", "CD4_TEG_13T", master$cell_type, perl=TRUE)
-master$cell_type <- gsub(".*13T_CD4teg_CD8TEG_blue.*", "CD8_TEG_13T", master$cell_type, perl=TRUE)
-
+##Join the information of metadata to master:
+master<-left_join(master, metadata)
 
 ### create a unique TRACKID. Each file processes with Imaris must have a unique track ID.
 category <- as.factor(master$filename)
@@ -77,7 +70,7 @@ master$TrackID2 <- as.numeric(as.character(master$TrackID2))
 master$filename<-NULL
 
 ## COLnames
-colnames(master) <- c("displacement","Time","TrackID","ID","speed","dist_org","red_lym","X-pos","Y-pos","Z-pos","well","exp","cell_type","ranks","TrackID2")
+colnames(master) <- c("displacement","Time","TrackID","ID","speed","dist_org","red_lym","X-pos","Y-pos","Z-pos","well","exp","cell_type","contact_threshold","ranks","TrackID2")
 
 ### save RDS for later use (e.g. backprojection of classified TrackIDs)
 saveRDS(master, "master_example_data")
@@ -103,7 +96,7 @@ for ( m in unique(master$well)){
   List = list()
   for (i in unique(distance_1$Time)){
     distanceDFi <- distance_1[distance_1$Time==i,]
-    distanceDF2<-as.data.frame(distanceDFi[,c(2,8,9,10)])
+    distanceDF2<-as.data.frame(distanceDFi[,c("Time","X-pos","Y-pos","Z-pos")])
     coordin<-ppx(distanceDF2, coord.type=c("t","s","s", "s")) ## create a multidimensional space-time pattern
     dist<- nndist(coordin)
     distanceDFi_dist<-cbind(distanceDFi, dist)
@@ -113,8 +106,9 @@ for ( m in unique(master$well)){
   List2[[length(List2)+1]] <-master_distance 
 }
 
+
 master_dist<-do.call(rbind, List2)
-colnames(master_dist)[c(16)] <- c("nearest_Tcell")
+colnames(master_dist)[c(17)] <- c("nearest_Tcell")
 ## create a binary variable that defines if a well is interacting with another wells nased on its distance
 master_dist$contact_lym<- ifelse(master_dist$nearest_Tcell<10,1,0)
 
@@ -123,62 +117,42 @@ master_dist$TrackID<-master_dist$TrackID2
 master_dist$TrackID2<-NULL
 
 library(reshape2)
+library(zoo)
 ## Since not all the tracks are tracked at all timepoints interpolate missing values and fill the NA (for each variable)
-##for speed
+## select the variables for which we need to interpolate NAs (numeric)
+column_names<-names(master_dist)
+column_names<-subset(column_names,!column_names %in%c("TrackID","ID", "X.pos","Y.pos","Z.pos","Time","well","speed",
+                                                      "exp","cell_type","contact_threshold", "ranks","nearest_Tcell" ))
+
+## create a first dataset with refilled values for speed:
 time_series<-acast(master_dist, Time ~ TrackID, value.var='speed',fun.aggregate = mean)
+## rownames timepoints:
+row.names(time_series)<-unique(master_dist$Time)
 ## get rid of NA
-library(zoo)
-time_series_zoo<-zoo(time_series)
-time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
+time_series_zoo<-zoo(time_series, row.names(time_series))
+time_series_zoo<-na.approx(time_series_zoo) ## replace by interpolated value
 time_series<-as.matrix(time_series_zoo)
 time_series2<-melt(time_series)
-time_series2_speed<-time_series2[complete.cases(time_series2), ] 
-colnames(time_series2_speed)<-c("Time", "TrackID", "speed")
+data<-time_series2[complete.cases(time_series2), ] 
+colnames(data)<-c("Time", "TrackID", "speed")
+## store this data for calculating lagged speed later:
+time_series2_speed<-data
 
-##for displacement
-time_series<-acast(master_dist, Time ~ TrackID, value.var='displacement',fun.aggregate = mean)
-## get rid of NA
-library(zoo)
-time_series_zoo<-zoo(time_series)
-time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
-time_series<-as.matrix(time_series_zoo)
-time_series2<-melt(time_series)
-time_series2_disp<-time_series2[complete.cases(time_series2), ] 
-colnames(time_series2_disp)<-c("Time", "TrackID", "displacement")
+### ----------
+for (i in column_names){
+  time_series<-acast(master_dist, Time ~ TrackID, value.var=i,fun.aggregate = mean)
+  row.names(time_series)<-unique(master_dist$Time)
+  ## get rid of NA
+  time_series_zoo<-zoo(time_series,row.names(time_series))
+  time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
+  time_series<-as.matrix(time_series_zoo)
+  time_series2<-melt(time_series)
+  new<-time_series2[complete.cases(time_series2), ] 
+  data[ , ncol(data) + 1] <- new[3]                  # Append new column
+  colnames(data)[ncol(data)] <- paste0(i)
+  
+}
 
-##for distorg
-time_series<-acast(master_dist, Time ~ TrackID, value.var='dist_org',fun.aggregate = mean)
-## get rid of NA
-library(zoo)
-time_series_zoo<-zoo(time_series)
-time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
-time_series<-as.matrix(time_series_zoo)
-time_series2<-melt(time_series)
-time_series2_dist_org<-time_series2[complete.cases(time_series2), ] 
-colnames(time_series2_dist_org)<-c("Time", "TrackID", "dist_org")
-
-##for red_lym
-time_series<-acast(master_dist, Time ~ TrackID, value.var='red_lym',fun.aggregate = mean)
-## get rid of NA
-library(zoo)
-time_series_zoo<-zoo(time_series)
-time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
-time_series<-as.matrix(time_series_zoo)
-time_series2<-melt(time_series)
-time_series2_red_lym<-time_series2[complete.cases(time_series2), ] 
-colnames(time_series2_red_lym)<-c("Time", "TrackID", "red_lym")
-
-
-##for contact lym
-time_series<-acast(master_dist, Time ~ TrackID, value.var='contact_lym',fun.aggregate = mean)
-## get rid of NA
-library(zoo)
-time_series_zoo<-zoo(time_series)
-time_series_zoo<-na.approx(time_series_zoo) ## replace by last value
-time_series<-as.matrix(time_series_zoo)
-time_series2<-melt(time_series)
-time_series2_contact_lym<-time_series2[complete.cases(time_series2), ] 
-colnames(time_series2_contact_lym)<-c("Time", "TrackID", "contact_lym")
 
 library(dplyr)
 ##For cell interaction we need to consider the following:
@@ -195,30 +169,27 @@ time_series<-as.matrix(time_series_zoo)
 time_series2_meanspeed<-melt(time_series)
 colnames(time_series2_meanspeed)<-c("Time", "TrackID", "meanspeed")
 
+## remove last NAs
+time_series2_meanspeed<-na.omit(time_series2_meanspeed)
 ### Create a dataframe with all the variables with corrected missing values
-master_corrected <- cbind(time_series2_speed,time_series2_disp,time_series2_dist_org,time_series2_red_lym, time_series2_contact_lym)
-## remove duplicated column names
-master_corrected <- master_corrected[,!duplicated(colnames(master_corrected))]
+master_corrected <- data
 ## join the information on the cell type/ experiment number and group number
-master_temp<- master[c("TrackID2", "well","exp", "cell_type")]
+master_temp<- master[c("TrackID2", "well","exp", "cell_type", "contact_threshold")]
 master_temp<-master_temp[!duplicated(master_temp$TrackID2),]
 master_corrected<- left_join(master_corrected ,master_temp, by=c("TrackID"="TrackID2"))
 #Merge the information for the mean speed over the last 20 mins
 master_corrected1<- merge(master_corrected, time_series2_meanspeed, by = c("Time","TrackID"))
 
-## Update the binary variable for contact with organoids (it can vary between experiments depending on the intensity of the T cells or organoids. Check the threshold of contact in the imaging data and update):
-master_corrected1_1<-subset(master_corrected1, exp%in%c("20200728"))
-master_corrected1_2<-subset(master_corrected1, exp%in%c("20201027"))
+## Update the binary variable for contact with organoids (it can vary between experiments depending on the intensity of the T cells or organoids. Check the threshold of contact in the imaging data and update in the metadata csv):
 
-master_corrected1_1$contact <- ifelse(master_corrected1_1$dist_org>0.0012, 0,1)
-master_corrected1_2$contact <- ifelse(master_corrected1_2$dist_org>0.0001, 0,1)
-
-
-master_corrected1<-rbind(master_corrected1_1,master_corrected1_2)
+master_corrected1$contact <- ifelse(master_corrected1$dist_org>master_corrected1$contact_threshold, 0,1)
 
 library(ggplot2)
-ggplot(master_corrected1, aes(x=contact, color=exp)) +
+ggplot(master_corrected1, aes(x=contact, color=as.factor(exp))) +
   geom_histogram(fill="white", alpha=0.5, position="identity")+facet_grid(.~well, scales = "free")
+
+## Remove contact threhold viarable:
+master_corrected1$contact_threshold<-NULL
 
 ## For clustering it is necessary to compare T cell tracks that have a similar length. 
 ## For that we select cell track that have at least 100 timepoints. 
