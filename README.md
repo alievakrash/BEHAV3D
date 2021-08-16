@@ -48,7 +48,7 @@ Output files: [Full_well_death_dynamics.rds](https://github.com/alievakrash/BEHA
 ### (2) T cell behavior classification module
 - Batch import tracked T cell data:
 
--For new files create a metadata csv containing information of experimental data, type of cells, well and threshold for contact between T cells and organoids. This metadata file should have the same filename as the rest of the statistics of that experiment, but ending in _metadata. 
+-For new files create a metadata csv containing information of experimental data, type of cells, well and threshold for contact between T cells and organoids. This metadata file should have the same filename as the rest of the statistics of that experiment, but ending in _metadata. Example [here] (https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/T%20cell%20dynamics%20classification/Example_dataset_T_cell_tracking/20201027_(6)10T_b_metadata.csv)
 
 -Run script [Import T cells data.R](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/T%20cell%20dynamics%20classification/Import%20T%20cells%20data.R). See below instructions to change directory.
 
