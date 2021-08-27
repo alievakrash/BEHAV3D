@@ -80,7 +80,15 @@ Output files: [Full_well_death_dynamics.rds](https://github.com/alievakrash/BEHA
 -Insert [here](https://github.com/alievakrash/BEHAV3D/blob/a4c9ea882c8a9109bb952ceb10ece68f082fcd9d/scripts/T%20cell%20dynamics%20classification/Random_forest_classifier.R#L107) the direction of your imported new dataset. For testing use the provided example dataset: [master_corrected3_example](https://github.com/alievakrash/BEHAV3D/blob/18f9332a54adf0b0d8e00d688802edc980aabdc9/scripts/T%20cell%20dynamics%20classification/example_dataset_T_cell_tracking/master_corrected3_example)
 
 ### (3) Behavior-guided transcriptomics module
-This module integrates information from single cell sequencing and behavioral profiling, by predicting in a behavioral phenotype of single cells in scRNA seq data. For more information see Figure 3 in https://www.biorxiv.org/content/10.1101/2021.05.05.442764v2
+This module integrates information from single cell sequencing and behavioral profiling, by predicting in a behavioral phenotype of single cells in scRNA seq data. For more information see Figure 4 in https://www.biorxiv.org/content/10.1101/2021.05.05.442764v2
+
+- Predict in silico the proportions of cells with different behavioral signatures in different experimental groups [non-engaged, non-engaged enriched, engaged, super-engaged]
+
+-Run script
+
+-Run script
+
+Store output containing the proportion of behavioral signatures per experimental condition to be used below.
 
 - Compute behavioral probability map for scRNA seq data:
 
@@ -88,7 +96,7 @@ This module integrates information from single cell sequencing and behavioral pr
 
 -Insert [here](https://github.com/alievakrash/BEHAV3D/blob/d3857d0ddebd6d1c3d88fe45c5a4aef8f648faf9/scripts/Behavior-guided%20transcriptomics/Behavioral-guided%20transcriptomics.R#L9) the directory containing the [scRNA seq dataset](https://github.com/alievakrash/BEHAV3D/blob/d3857d0ddebd6d1c3d88fe45c5a4aef8f648faf9/scripts/Behavior-guided%20transcriptomics/example%20dataset/scRNA_seq_dataset.rds) containing pseudotime trajectory on your PC.
 
--Insert [here](https://github.com/alievakrash/BEHAV3D/blob/beda6096a61b5795dde6316f0aa87dd3a1f1c1ae/scripts/Behavior-guided%20transcriptomics/Behavioral-guided%20transcriptomics.R#L18) the direction of [csv file](https://github.com/alievakrash/BEHAV3D/blob/96cf1b1e283354b41d578db8599a7be6f76f32b0/scripts/Behavior-guided%20transcriptomics/example%20dataset/CD8_behav_sig_per_exp_condition.csv) containing the proportion of behavioral signatures epr experimental condition, calculated in silico based on imaging data.
+-Insert [here](https://github.com/alievakrash/BEHAV3D/blob/beda6096a61b5795dde6316f0aa87dd3a1f1c1ae/scripts/Behavior-guided%20transcriptomics/Behavioral-guided%20transcriptomics.R#L18) the direction of [csv file](https://github.com/alievakrash/BEHAV3D/blob/96cf1b1e283354b41d578db8599a7be6f76f32b0/scripts/Behavior-guided%20transcriptomics/example%20dataset/CD8_behav_sig_per_exp_condition.csv) containing the proportion of behavioral signatures per experimental condition, calculated in silico based on imaging data.
 
 -Insert [here](https://github.com/alievakrash/BEHAV3D/blob/96cf1b1e283354b41d578db8599a7be6f76f32b0/scripts/Behavior-guided%20transcriptomics/Behavioral-guided%20transcriptomics.R#L99) the direction of the [folder](https://github.com/alievakrash/BEHAV3D/tree/main/scripts/Behavior-guided%20transcriptomics/Probability_map) containing a set of probability maps quantified with different cluster resolutions.
 
