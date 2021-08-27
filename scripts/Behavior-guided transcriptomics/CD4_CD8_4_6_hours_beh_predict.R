@@ -1,5 +1,5 @@
 ## Impor the processed tracks with a length that is coinciding the the length of the experiment in Fig 4a.
-
+setwd()
 library(dplyr)
 master_CD3<-readRDS("master_CD3_scRNA_seq_inference_4")
 ## Import the training dataset
@@ -284,7 +284,7 @@ Plot_x<-ggplot(CD8_engagement, aes(fill=as.factor(cluster), x=engagement)) +
     "brown1"))+ggtitle("Super-engager & Never-engager CD8")
 Plot_x
 ### save data to csv same folder where the pseudotime clustering from Farid
-write.csv(CD8_behav,"E:/DATA/scRNA seq Amber/Farid_pseudotime/CD8_engagement_behavior_freq_20210203.csv")
+write.csv(CD8_behav,"CD8_engagement_behavior_freq.csv")
 
 
 #### Calculate the mean contact time per condition for information (used in the paper)
@@ -355,12 +355,12 @@ Plot_y
 
 
 ### save data to csv same folder where the pseudotime clustering from Farid
-write.csv(CD4_behav,"E:/DATA/scRNA seq Amber/Farid_pseudotime/CD4_engagement_behavior_freq_20210203.csv")
+write.csv(CD4_behav,"CD4_engagement_behavior_freq.csv")
 
 
 
 ## Save output for figure Fig 4a
-pdf("D:/PMC/RESULTS/Floppy_T_cells/exportsR/20201103/20210120_predict_behavior_scRNA_seq/Engager_Super_ENG_proportions_CD4_CD8_3.pdf")
+pdf("Engager_Super_ENG_proportions_CD4_CD8.pdf")
 Plot_x
 Plot_y
 dev.off()
