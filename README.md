@@ -84,11 +84,11 @@ This module integrates information from single cell sequencing and behavioral pr
 
 - Predict in silico the proportions of cells with different behavioral signatures in different experimental groups [non-engaged, non-engaged enriched, engaged, super-engaged]
 
--Run script
+-Run script [CD4_CD8_4_6_hours_beh_import](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/Behavior-guided%20transcriptomics/CD4_CD8_4_6_hours_beh_import.R) to select the tracks of a length that coincides with the length of the simulated experiment. If you are processing new experimenta conditions (e.g. T cells incubated with a new set of organoids), these first need to be imported according to [Import T cells data.R](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/T%20cell%20dynamics%20classification/Import%20T%20cells%20data.R) and the [master output](https://github.com/alievakrash/BEHAV3D/blob/555a3f59f6c8e5dca2f0ed877deea4055e947c9a/scripts/T%20cell%20dynamics%20classification/Import%20T%20cells%20data.R#L76) should be saved to be used as an input for [this script](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/Behavior-guided%20transcriptomics/CD4_CD8_4_6_hours_beh_import.R).
 
--Run script
+-Run script [CD4_CD8_4_6_hours_beh_predict](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/Behavior-guided%20transcriptomics/CD4_CD8_4_6_hours_beh_predict.R)
 
-Store output containing the proportion of behavioral signatures per experimental condition to be used below.
+Store [output](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/Behavior-guided%20transcriptomics/example%20dataset/CD8_engagement_behavior_freq.csv) containing the proportion of behavioral signatures per experimental condition and per [cell type](https://github.com/alievakrash/BEHAV3D/blob/dev_01/scripts/Behavior-guided%20transcriptomics/example%20dataset/CD4_engagement_behavior_freq.csv) to be used below.
 
 - Compute behavioral probability map for scRNA seq data:
 
