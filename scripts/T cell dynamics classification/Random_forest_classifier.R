@@ -160,3 +160,13 @@ Per<-Per+theme_void()+ scale_fill_manual(values=c("gold3",
                                                   "firebrick",
                                                   "brown1"))+theme(aspect.ratio = 1,strip.text.x = element_text(angle = 90))
 Per
+
+
+
+### Run a chisq.test to see if the distibution is different between conditions
+library(reshape2)
+table1<-acast(Percentage_clus, cluster2~cell_type, value.var = "percentage")
+table1[is.na(table1)]<-0  ## If any cluster are missing convert NA to 0
+
+## Run Pearson Chi sq test to see if there is a different distribution of clusters between cell types
+chisq.test(table1)
