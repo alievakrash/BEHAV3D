@@ -1,6 +1,7 @@
 
 # BEHAV3D pipeline
 ## Most updated version of BEHAV3D pipeline can be found [here](https://github.com/AlievaRios/BEHAV3D/)
+## BEHAV3D now runs on Google Colab, check it out [here](https://github.com/imaigene/BEHAV3D_Colab?)
 
 ### Overview
 BEHAV3D is dynamic immuno-organoid 3D imaging-transcriptomics platform to study tumor death dynamics; immune cell behavior and behavior-guided transcriptomics. 
